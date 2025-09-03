@@ -1,3 +1,16 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+
+@layer components {
+  .btn-highlight {
+    @apply bg-blue-600 hover:bg-blue-700 text-white font-semibold
+           py-2 px-4 rounded shadow-lg transition;
+  }
+
+  .link-highlight {
+    @apply text-blue-600 hover:text-blue-700 underline
+           underline-offset-2 transition;
+  }
+}
