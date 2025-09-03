@@ -2,6 +2,11 @@
 
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\StoresController;
+use App\Http\Controllers\ExportsController;
+use App\Http\Controllers\ProductsController;
+use App\Http\Controllers\OrdersController;
+use App\Http\Controllers\OAuth\ShopifyOAuthController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -18,15 +23,21 @@ Route::middleware('auth')->group(function () {
 
     Route::view('/dashboard', 'dashboard')->name('dashboard');
 
-    Route::get('/stores', [\App\Http\Controllers\StoresController::class, 'index'])->name('stores.index');
-    Route::get('/stores/fragment', [\App\Http\Controllers\StoresController::class, 'fragment'])->name('stores.fragment');
-    Route::get('/stores/create', [\App\Http\Controllers\StoresController::class, 'create'])->name('stores.create');
-    Route::post('/stores', [\App\Http\Controllers\StoresController::class, 'store'])->name('stores.store');
+    Route::get('/stores', [StoresController::class, 'index'])->name('stores.index');
+    Route::get('/stores/fragment', [StoresController::class, 'fragment'])->name('stores.fragment');
+    Route::get('/stores/create', [StoresController::class, 'create'])->name('stores.create');
+    Route::post('/stores', [StoresController::class, 'store'])->name('stores.store');
 
-    Route::get('/stores/{store}/products', [\App\Http\Controllers\ProductsController::class, 'index'])->name('products.index');
-    Route::get('/stores/{store}/orders', [\App\Http\Controllers\OrdersController::class, 'index'])->name('orders.index');
+    Route::post('/stores/{store}/exports', [ExportsController::class, 'store'])->name('exports.store');
 
-    Route::post('/stores/{store}/exports', [\App\Http\Controllers\ExportsController::class, 'store'])->name('exports.store');
+    Route::get('/stores/{store}/products', [ProductsController::class, 'index'])->name('products.index');
+    Route::get('/stores/{store}/products/fragment', [ProductsController::class, 'fragment'])->name('products.fragment');
+
+    Route::get('/stores/{store}/orders', [OrdersController::class, 'index'])->name('orders.index');
+    Route::get('/stores/{store}/orders/fragment', [OrdersController::class, 'fragment'])->name('orders.fragment');
+
+    Route::get('/oauth/shopify/{store}/redirect', [ShopifyOAuthController::class, 'redirect'])->name('oauth.shopify.redirect');
+    Route::get('/oauth/shopify/callback', [ShopifyOAuthController::class, 'callback'])->name('oauth.shopify.callback');
 
 });
 

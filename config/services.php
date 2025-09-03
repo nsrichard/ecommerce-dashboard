@@ -35,4 +35,7 @@ return [
         ],
     ],
 
+    'http' => [
+        'timeout' => env('HTTP_CLIENT_TIMEOUT', 10),
+    ],
 ];
