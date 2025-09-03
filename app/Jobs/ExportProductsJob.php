@@ -2,10 +2,11 @@
 
 namespace App\Jobs;
 
+use App\Models\Export;
 use App\Models\Product;
 use App\Models\Store;
-use App\Models\Export;
-use App\Enums\ExportStatus;
+use App\Domain\Enums\ExportStatus;
+use App\Services\SyncService;
 use Illuminate\Bus\Batchable;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -25,7 +26,7 @@ class ExportProductsJob implements ShouldQueue
 
     public function __construct(private readonly Export $export) {}
 
-    public function handle(): void
+    public function handle(SyncService $productService): void
     {
         $this->export->update([
             'status'     => ExportStatus::PROCESSING,
@@ -38,30 +39,33 @@ class ExportProductsJob implements ShouldQueue
             'format'    => $this->export->meta['format'] ?? 'csv',
         ]);
 
-        $disk     = Storage::disk('local');
-        $folder   = 'private/exports';
-        $disk->exists($folder) || $disk->makeDirectory($folder, 0755, true);
-
-        $format   = $this->export->meta['format'] ?? 'csv';
-        $random   = Str::random(6);
-        $filename = "{$folder}/products_{$this->export->id}_{$random}.{$format}";
+        $store = Store::findOrFail($this->export->store_id);
+        $productService->syncProducts($store);
 
         $headings = ['Nombre', 'SKU', 'Precio', 'Moneda', 'Imagen'];
         $rows     = [];
 
-        Product::where('store_id', $this->export->store_id)
+        Product::where('store_id', $store->id)
             ->orderBy('id')
             ->chunk(500, function ($products) use (&$rows) {
                 foreach ($products as $p) {
                     $rows[] = [
                         $p->name,
                         $p->sku,
-                        $p->price,
+                        number_format($p->price, 2),
                         $p->currency,
                         $p->image_url,
                     ];
                 }
             });
+
+        $disk   = Storage::disk('local');
+        $folder = 'private/exports';
+        $disk->exists($folder) || $disk->makeDirectory($folder, 0755, true);
+
+        $format   = $this->export->meta['format'] ?? 'csv';
+        $random   = Str::random(6);
+        $filename = "{$folder}/products_{$this->export->id}_{$random}.{$format}";
 
         if ($format === 'xlsx') {
             Excel::store(
@@ -74,14 +78,13 @@ class ExportProductsJob implements ShouldQueue
             $path   = $disk->path($filename);
             $handle = fopen($path, 'w+');
             fputcsv($handle, $headings);
-
             foreach ($rows as $row) {
                 fputcsv($handle, $row);
             }
-
             fclose($handle);
         }
 
+        // 6. Registrar finalización y actualizar estado
         Log::channel('exports')->info('export finished', [
             'export_id'   => $this->export->id,
             'store_id'    => $this->export->store_id,

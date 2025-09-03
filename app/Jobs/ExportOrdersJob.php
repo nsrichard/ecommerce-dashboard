@@ -3,73 +3,81 @@
 namespace App\Jobs;
 
 use App\Domain\Enums\ExportStatus;
-use App\Services\OrderService;
 use App\Models\Export;
-use Illuminate\Bus\Queueable;
+use App\Models\Order;
+use App\Models\Store;
+use App\Services\SyncService;
 use Illuminate\Bus\Batchable;
+use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
-use App\Exports\ArrayExport;
+use Maatwebsite\Excel\Facades\Excel;
 use Maatwebsite\Excel\Excel as ExcelService;
-use Maatwebsite\Excel\Facades\Excel;  
-use Illuminate\Support\Facades\Log;
+use App\Exports\ArrayExport;
 
 class ExportOrdersJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels, Batchable;
 
-    public function __construct(private Export $export) {}
+    public function __construct(private readonly Export $export) {}
 
     public function handle(OrderService $orderService): void
     {
         $this->export->update([
-            'status'     => ExportStatus::PROCESSING,
+            'status'     => SyncService::PROCESSING,
             'started_at' => now(),
         ]);
 
         Log::channel('exports')->info('export started', [
             'export_id' => $this->export->id,
             'store_id'  => $this->export->store_id,
-            'type'      => $this->export->type->value,
-            'format'    => $this->export->meta['format'],
+            'format'    => $this->export->meta['format'] ?? 'csv',
         ]);
 
-        $page = $orderService->listRecent($this->export->store, null, null, ['page' => 1, 'limit' => 1000]);
+        $store = Store::findOrFail($this->export->store_id);
+        $orderService->syncOrders($store);
 
-        $format  = $this->export->meta['format'] ?? 'csv';
-        $rows    = [];
         $headings = ['Número','Cliente','Estado','Fecha','Total','Moneda'];
+        $rows      = [];
 
-        foreach ($page->items as $o) {
-            $rows[] = [
-                $o->number,
-                $o->customerName,
-                $o->status,
-                $o->createdAt->format('Y-m-d H:i'),
-                number_format($o->total, 2),
-                $o->currency,
-            ];
-        }
+        Order::where('store_id', $store->id)
+            ->orderBy('created_at', 'desc')
+            ->chunk(500, function ($orders) use (&$rows) {
+                foreach ($orders as $o) {
+                    $rows[] = [
+                        $o->number,
+                        $o->customer_name,
+                        $o->status,
+                        $o->created_at->format('Y-m-d H:i'),
+                        number_format($o->total, 2),
+                        $o->currency,
+                    ];
+                }
+            });
 
-        $exportDir = storage_path('app/private/exports');
-        if (! is_dir($exportDir)) {
-            mkdir($exportDir, 0755, true);
-        }
+        $disk   = Storage::disk('local');
+        $folder = 'private/exports';
+        $disk->exists($folder) || $disk->makeDirectory($folder, 0755, true);
 
-        $filename = 'exports/orders_'.$this->export->id.'_'.Str::random(6).'.'.$format;
+        $format   = $this->export->meta['format'] ?? 'csv';
+        $random   = Str::random(6);
+        $filename = "{$folder}/orders_{$this->export->id}_{$random}.{$format}";
+
         if ($format === 'xlsx') {
             Excel::store(
-            new ArrayExport($headings, $rows, $filename),
-            $filename,
-            'local',
-            ExcelService::XLSX
+                new ArrayExport($headings, $rows),
+                $filename,
+                'local',
+                ExcelService::XLSX
             );
         } else {
-            $handle = fopen(Storage::path($filename), 'w+');
+            $path   = $disk->path($filename);
+            $handle = fopen($path, 'w+');
             fputcsv($handle, $headings);
             foreach ($rows as $row) {
                 fputcsv($handle, $row);
@@ -80,14 +88,14 @@ class ExportOrdersJob implements ShouldQueue
         Log::channel('exports')->info('export finished', [
             'export_id'   => $this->export->id,
             'store_id'    => $this->export->store_id,
-            'path'        => $filename,
+            'path'         => $filename,
             'duration_ms' => $this->batch()?->metrics()->runtime() ?? null,
         ]);
 
         $this->export->update([
-            'path'        => $filename,
-            'status'      => ExportStatus::DONE,
-            'finished_at' => now(),
+            'path'         => $filename,
+            'status'       => ExportStatus::DONE,
+            'finished_at'  => now(),
         ]);
     }
 }
