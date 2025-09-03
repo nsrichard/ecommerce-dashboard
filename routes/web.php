@@ -30,6 +30,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/stores', [StoresController::class, 'store'])->name('stores.store');
 
     Route::post('/stores/{store}/exports', [ExportsController::class, 'store'])->name('exports.store');
+    Route::get('/stores/{store}/exports/fragment', [ExportsController::class, 'fragment'])->name('exports.fragment');
+    Route::get('/exports/{export}/download', [ExportsController::class, 'download'])->name('exports.download');
 
     Route::get('/stores/{store}/products', [ProductsController::class, 'index'])->name('products.index');
     Route::get('/stores/{store}/products/fragment', [ProductsController::class, 'fragment'])->name('products.fragment');
