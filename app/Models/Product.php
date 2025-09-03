@@ -23,23 +23,21 @@ class Product extends Model
 
     public function scopeFilter(Builder $query, array $filters): Builder
     {
-        if ($from = $filters['from'] ?? null) {
-            $query->where('external_created_at', '>=', $from);
+        if (! empty($filters['q'])) {
+            $q = $filters['q'];
+            $query->where(function (Builder $qb) use ($q) {
+                $qb->where('name', 'like', "%{$q}%")
+                   ->orWhere('sku',  'like', "%{$q}%");
+            });
         }
-        if ($to = $filters['to'] ?? null) {
-            $query->where('external_created_at', '<=', $to);
+        if (isset($filters['min_price'])) {
+            $query->where('price', '>=', $filters['min_price']);
         }
-        if ($email = $filters['email'] ?? null) {
-            $query->where('customer_email', 'like', "%{$email}%");
+        if (isset($filters['max_price'])) {
+            $query->where('price', '<=', $filters['max_price']);
         }
-        if ($status = $filters['status'] ?? null) {
-            $query->where('status', $status);
-        }
-        if (isset($filters['min_total'])) {
-            $query->where('total', '>=', $filters['min_total']);
-        }
-        if (isset($filters['max_total'])) {
-            $query->where('total', '<=', $filters['max_total']);
+        if (! empty($filters['currency'])) {
+            $query->where('currency', $filters['currency']);
         }
 
         return $query;

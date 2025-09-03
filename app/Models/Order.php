@@ -35,22 +35,20 @@ class Order extends Model
         if (! empty($filters['q'])) {
             $q = $filters['q'];
             $query->where(function (Builder $qb) use ($q) {
-                $qb->where('name', 'like', "%{$q}%")
-                   ->orWhere('sku',  'like', "%{$q}%");
+                $qb->where('customer_name', 'like', "%{$q}%")
+                   ->orWhere('customer_email',  'like', "%{$q}%");
             });
         }
-
-        if (isset($filters['min_price'])) {
-            $query->where('price', '>=', $filters['min_price']);
+        if ($status = $filters['status'] ?? null) {
+            $query->where('status', $status);
+        }
+        if (isset($filters['min_total'])) {
+            $query->where('total', '>=', $filters['min_total']);
+        }
+        if (isset($filters['max_total'])) {
+            $query->where('total', '<=', $filters['max_total']);
         }
 
-        if (isset($filters['max_price'])) {
-            $query->where('price', '<=', $filters['max_price']);
-        }
-
-        if (! empty($filters['currency'])) {
-            $query->where('currency', $filters['currency']);
-        }
 
         return $query;
     }

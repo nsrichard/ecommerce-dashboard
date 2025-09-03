@@ -13,6 +13,13 @@
       class="grid grid-cols-3 gap-4 mb-6"
     >
       <input
+        type="text"
+        name="q"
+        value="{{ $filters['q'] ?? '' }}"
+        placeholder="Buscar..."
+        class="border p-2 rounded col-span-2"
+      />
+      <input
         type="date"
         name="from"
         value="{{ request('from') }}"
@@ -25,13 +32,6 @@
         value="{{ request('to') }}"
         class="border p-2 rounded"
         placeholder="Hasta"
-      >
-      <input
-        type="email"
-        name="email"
-        value="{{ request('email') }}"
-        class="border p-2 rounded"
-        placeholder="Email cliente"
       >
       <input
         type="text"
