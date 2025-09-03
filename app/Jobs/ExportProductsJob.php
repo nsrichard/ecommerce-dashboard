@@ -6,18 +6,21 @@ use App\Domain\Enums\ExportStatus;
 use App\Services\ProductService;
 use App\Models\Export;
 use Illuminate\Bus\Queueable;
+use Illuminate\Bus\Batchable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use App\Exports\ArrayExport;
-use Maatwebsite\Excel\Excel;
+use Maatwebsite\Excel\Excel as ExcelService;
+use Maatwebsite\Excel\Facades\Excel;  
 use Illuminate\Support\Facades\Log;
 
 class ExportProductsJob implements ShouldQueue
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels, Batchable;
 
     public function __construct(private Export $export) {}
 
@@ -45,13 +48,18 @@ class ExportProductsJob implements ShouldQueue
             $rows[] = [$p->name, $p->sku, $p->price, $p->currency, $p->imageUrl];
         }
 
+        $exportDir = storage_path('app/private/exports');
+        if (! is_dir($exportDir)) {
+            mkdir($exportDir, 0755, true);
+        }
+
         $filename = 'exports/products_'.$this->export->id.'_'.Str::random(6).'.'.$format;
         if ($format === 'xlsx') {
             Excel::store(
             new ArrayExport($headings, $rows, $filename),
             $filename,
             'local',
-            Excel::XLSX
+            ExcelService::XLSX
             );
         } else {
             $handle = fopen(Storage::path($filename), 'w+');

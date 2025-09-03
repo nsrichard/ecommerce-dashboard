@@ -30,7 +30,16 @@
         <input type="hidden" name="type" value="products">
         <input type="hidden" name="format" value="csv">
         <button type="submit" class="bg-indigo-600 text-white px-3 py-1 rounded">
-          Exportar Productos CSV
+          Exportar CSV
+        </button>
+      </form>
+
+      <form method="POST" action="{{ route('exports.store', $store) }}">
+        @csrf
+        <input type="hidden" name="type" value="products">
+        <input type="hidden" name="format" value="xlsx">
+        <button type="submit" class="bg-indigo-600 text-white px-3 py-1 rounded">
+          Exportar xlsx
         </button>
       </form>
 
