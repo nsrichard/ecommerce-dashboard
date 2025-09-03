@@ -7,6 +7,7 @@ use App\Http\Controllers\ExportsController;
 use App\Http\Controllers\ProductsController;
 use App\Http\Controllers\OrdersController;
 use App\Http\Controllers\OAuth\ShopifyOAuthController;
+use App\Http\Controllers\StoreConnectionController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -37,7 +38,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/stores/{store}/orders/fragment', [OrdersController::class, 'fragment'])->name('orders.fragment');
 
     Route::get('/oauth/shopify/{store}/redirect', [ShopifyOAuthController::class, 'redirect'])->name('oauth.shopify.redirect');
-    Route::get('/oauth/shopify/callback', [ShopifyOAuthController::class, 'callback'])->name('oauth.shopify.callback');
+    Route::get('/oauth/shopify/{store}/callback', [ShopifyOAuthController::class, 'callback'])->name('oauth.shopify.callback');
+
+    Route::get('/stores/{store}/connect/woocommerce', [StoreConnectionController::class, 'showWooForm'])->name('stores.connect.woocommerce');
+    Route::post('/stores/{store}/connect/woocommerce', [StoreConnectionController::class, 'storeWooCredentials'])->name('stores.connect.woocommerce.store');
 
 });
 
