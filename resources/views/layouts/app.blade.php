@@ -13,6 +13,8 @@
 
         <script src="https://unpkg.com/htmx.org@1.9.12" integrity="sha384-hash" crossorigin="anonymous"></script>
         <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+        
+        <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -37,5 +39,8 @@
                 </div>
             </main>
         </div>
+        
+        @stack('scripts')
+
     </body>
 </html>
