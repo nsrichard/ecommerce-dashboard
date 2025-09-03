@@ -127,6 +127,13 @@ return [
             'path' => storage_path('logs/laravel.log'),
         ],
 
+        'exports' => [
+            'driver' => 'single',
+            'path'   => storage_path('logs/exports.log'),
+            'level'  => 'info',
+            'tap'    => [App\Logging\CustomizeFormatter::class],
+        ],
+
     ],
 
 ];
