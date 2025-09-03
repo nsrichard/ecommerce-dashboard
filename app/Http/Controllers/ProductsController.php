@@ -3,32 +3,49 @@
 namespace App\Http\Controllers;
 
 use App\Models\Store;
-use App\Services\ProductService;
-use Illuminate\Http\Request;
+use App\Models\Product;
+use App\Http\Requests\ProductsFilterRequest;
+use App\Services\SyncService;
+use App\Support\DTO\PageDTO;
 
 class ProductsController extends Controller
 {
-    public function __construct(private readonly ProductService $service) {}
+    public function __construct(
+        private readonly SyncService $sync
+    ) {}
 
-    public function index(Store $store, Request $request)
+    public function index(Store $store, ProductsFilterRequest $request)
     {
-        $filters = $request->only(['q']);
-        $pageDTO = $this->service->list($store, $filters, [
-            'page' => (int)$request->integer('page', 1),
-            'limit' => (int)$request->integer('limit', 25),
-        ]);
+        $this->sync->syncProducts($store);
 
-        return view('products.index', compact('store', 'pageDTO'));
+        $pageDTO = $this->buildPageDTO($store->id, $request->filters(), $request->get('limit', 10));
+
+        return view('products.index', [
+            'store'   => $store,
+            'pageDTO' => $pageDTO,
+            'filters' => $request->filters(),
+        ]);
     }
 
-    public function fragment(Store $store, Request $request)
+    public function fragment(Store $store, ProductsFilterRequest $request)
     {
-        $filters = $request->only(['q']);
-        $pageDTO = $this->service->list($store, $filters, [
-            'page' => (int)$request->integer('page', 1),
-            'limit' => (int)$request->integer('limit', 25),
-        ]);
+        $pageDTO = $this->buildPageDTO($store->id, $request->filters(), $request->get('limit', 10));
 
-        return view('products.partials.list', compact('pageDTO', 'store'));
+        return view('products.partials.list', [
+            'store'   => $store,
+            'pageDTO' => $pageDTO,
+            'filters' => $request->filters(),
+        ]);
+    }
+
+    private function buildPageDTO(int $storeId, array $filters, int $limit): PageDTO
+    {
+        $paginator = Product::where('store_id', $storeId)
+            ->filter($filters)
+            ->orderBy('name')
+            ->paginate($limit)
+            ->appends($filters);
+
+        return PageDTO::fromPaginator($paginator);
     }
 }

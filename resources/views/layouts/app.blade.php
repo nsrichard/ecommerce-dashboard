@@ -40,7 +40,7 @@
             </main>
         </div>
         
+        <script src="https://unpkg.com/htmx.org"></script>
         @stack('scripts')
-
     </body>
 </html>

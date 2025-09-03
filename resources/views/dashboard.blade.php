@@ -33,6 +33,20 @@
       <canvas id="salesDoughnutChart" height="120"></canvas>
     </div>
 
+    <form method="GET" action="{{ route('dashboard') }}" class="grid grid-cols-4 gap-4 items-end">
+      <input type="date" name="from" value="{{ request('from') }}" class="border p-2 rounded">
+      <input type="date" name="to" value="{{ request('to') }}" class="border p-2 rounded">
+
+      <select name="platform" class="border p-2 rounded">
+        <option value="">Todas las plataformas</option>
+        <option value="shopify" @selected(request('platform') === 'shopify')>Shopify</option>
+        <option value="woocommerce" @selected(request('platform') === 'woocommerce')>WooCommerce</option>
+      </select>
+
+      <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded">Filtrar</button>
+    </form>
+
+
     @forelse($stores as $store)
       <div class="border rounded-lg p-4 shadow-sm">
         <h3 class="text-lg font-bold">{{ $store->name }} ({{ ucfirst($store->platform->value) }})</h3>
@@ -47,7 +61,7 @@
             <p class="text-sm text-gray-600">
               Pedidos ({{ $from->format('Y-m-d') }} – {{ $to->format('Y-m-d') }})
             </p>
-            <p class="text-2xl">{{ $summaries[$store->id]['orderCount'] }}</p>
+            <p class="text-2xl">{{ $summaries[$store->id]['ordersCount'] }}</p>
           </div>
 
           <div class="bg-gray-100 p-4 rounded text-center">
@@ -68,7 +82,7 @@
     document.addEventListener('DOMContentLoaded', function () {
       const stores = @json($stores->pluck('name'));
       const productCounts = @json($stores->map(fn($s) => $summaries[$s->id]['productCount']));
-      const orderCounts = @json($stores->map(fn($s) => $summaries[$s->id]['orderCount']));
+      const orderCounts = @json($stores->map(fn($s) => $summaries[$s->id]['ordersCount']));
       const salesTotals = @json($stores->map(fn($s) => $summaries[$s->id]['salesTotal']));
 
       new Chart(document.getElementById('metricsBarChart'), {

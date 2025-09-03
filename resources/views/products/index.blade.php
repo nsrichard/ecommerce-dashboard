@@ -5,23 +5,66 @@
 
   <div class="py-6 space-y-4 max-w-4xl mx-auto">
     
-    <div class="flex items-center gap-3">
+    <form
+      id="filters-form"
+      hx-get="{{ route('products.fragment', $store) }}"
+      hx-target="#products-list"
+      hx-trigger="submit"
+      class="grid grid-cols-4 gap-3"
+    >
       <input
-        type="text" name="q" placeholder="Buscar..."
-        class="border p-2 rounded w-full"
-        hx-get="{{ route('products.fragment', $store) }}"
-        hx-trigger="keyup changed delay:400ms"
-        hx-target="#products-list"
+        type="text"
+        name="q"
+        value="{{ $filters['q'] ?? '' }}"
+        placeholder="Buscar..."
+        class="border p-2 rounded col-span-2"
       />
-    </div>
+
+      <input
+        type="number"
+        name="min_price"
+        value="{{ $filters['min_price'] ?? '' }}"
+        placeholder="Precio min."
+        class="border p-2 rounded"
+        min="0"
+      />
+
+      <input
+        type="number"
+        name="max_price"
+        value="{{ $filters['max_price'] ?? '' }}"
+        placeholder="Precio max."
+        class="border p-2 rounded"
+        min="0"
+      />
+
+      <select name="currency" class="border p-2 rounded">
+        <option value="">Moneda</option>
+        <option value="USD" @selected(($filters['currency'] ?? '')==='USD')>USD</option>
+        <option value="EUR" @selected(($filters['currency'] ?? '')==='EUR')>EUR</option>
+      </select>
+
+      {{-- campos de paginación ocultos --}}
+      <input type="hidden" name="page"  value="{{ $filters['page']  ?? 1 }}" />
+      <input type="hidden" name="limit" value="{{ $filters['limit'] ?? 10 }}" />
+
+      <button
+        type="submit"
+        class="col-span-4 bg-indigo-600 text-white py-2 rounded"
+      >
+        Filtrar
+      </button>
+    </form>
+
 
     <div
       id="products-list"
       hx-get="{{ route('products.fragment', $store) }}"
-      hx-trigger="load"
+      hx-trigger="load, keyup from:#filters-form delay:400ms"
       hx-target="#products-list"
+      hx-include="#filters-form"
     >
-      @include('products.partials.list', ['pageDTO' => $pageDTO, 'store' => $store])
+      @include('products.partials.list', compact('store','pageDTO','filters'))
     </div>
 
     <div class="mt-4 flex items-center gap-4">

@@ -5,6 +5,66 @@
 
   <div class="py-6 space-y-4 max-w-4xl mx-auto">
 
+    <form
+      id="orders-filters-form"
+      hx-get="{{ route('orders.fragment', $store) }}"
+      hx-target="#orders-list"
+      hx-swap="innerHTML"
+      class="grid grid-cols-3 gap-4 mb-6"
+    >
+      <input
+        type="date"
+        name="from"
+        value="{{ request('from') }}"
+        class="border p-2 rounded"
+        placeholder="Desde"
+      >
+      <input
+        type="date"
+        name="to"
+        value="{{ request('to') }}"
+        class="border p-2 rounded"
+        placeholder="Hasta"
+      >
+      <input
+        type="email"
+        name="email"
+        value="{{ request('email') }}"
+        class="border p-2 rounded"
+        placeholder="Email cliente"
+      >
+      <input
+        type="text"
+        name="status"
+        value="{{ request('status') }}"
+        class="border p-2 rounded"
+        placeholder="Estado"
+      >
+      <input
+        type="number"
+        step="0.01"
+        name="min_total"
+        value="{{ request('min_total') }}"
+        class="border p-2 rounded"
+        placeholder="Min total"
+      >
+      <input
+        type="number"
+        step="0.01"
+        name="max_total"
+        value="{{ request('max_total') }}"
+        class="border p-2 rounded"
+        placeholder="Max total"
+      >
+      <button
+        type="submit"
+        class="col-span-3 bg-blue-600 text-white px-4 py-2 rounded"
+      >
+        Filtrar
+      </button>
+    </form>
+
+
     <div
       id="orders-list"
       hx-get="{{ route('orders.fragment', $store) }}"

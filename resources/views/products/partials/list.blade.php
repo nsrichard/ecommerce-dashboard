@@ -27,4 +27,14 @@
     @endforeach
     </tbody>
   </table>
+
+  <x-paginator
+    :route-name="'products.fragment'"
+    :route-params="['store' => $store]"
+    :page-d-t-o="$pageDTO"
+    :filters="$filters"
+    target-id="products-list"
+    form-id="filters-form"
+  />
+
 @endif

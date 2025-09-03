@@ -134,6 +134,13 @@ return [
             'tap'    => [App\Logging\CustomizeFormatter::class],
         ],
 
+        'sync' => [
+            'driver' => 'single',
+            'path'   => storage_path('logs/sync.log'),
+            'level'  => 'info',
+            'tap'    => [App\Logging\CustomizeFormatter::class],
+        ],
+
     ],
 
 ];
