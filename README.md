@@ -50,8 +50,33 @@ php artisan migrate --seed
 php artisan serve
 ```
 
+# Testing
+
+Configurar conexión de prueba en .env.testing (opcional) copiar .env.example a .env.testing y ajustar DB_DATABASE_TEST, etc.
+
+```bash
+php artisan test 
+```
+
+# Jobs
+
+Configurar/Verificar driver de colas en .env QUEUE_CONNECTION=database
+
+```bash
+php artisan queue:work --once
+```
+
+Para pruebas automáticas de jobs incluir dispatch dentro de tests y usar driver sync en .env.testing
+
 
 # Instrucción de uso
 - Navegar a http://localhost:8000/
 - Registrar o iniciar sesión.
 - En el listado Tiendas (previamente registrar o editar alguna) al momento de conectar solicitará las credenciales de woocommerce o shopify. Realizado esto se podrá mostrar o sincronizar los productos y pedidos desde el store externo.
+- Las descargas de xlsx o csv se gestiona con jobs. Para ellos correr los jobs. 
+
+# Imágenes de referencia:
+
+![Captura 1](images/read-1.jpeg)
+![Captura 2](images/read-2.jpeg)
+![Captura 3](images/read-3.jpeg)
