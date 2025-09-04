@@ -77,6 +77,6 @@ Para pruebas automáticas de jobs incluir dispatch dentro de tests y usar driver
 
 # Imágenes de referencia:
 
-![Captura 1](images/read-1.jpeg)
-![Captura 2](images/read-2.jpeg)
-![Captura 3](images/read-3.jpeg)
+![Captura 1](public/images/read-1.jpeg)
+![Captura 2](public/images/read-2.jpeg)
+![Captura 3](public/images/read-3.jpeg)
